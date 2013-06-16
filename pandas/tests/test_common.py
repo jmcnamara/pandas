@@ -13,9 +13,9 @@ import pandas.util.testing as tm
 import pandas.core.config as cf
 
 import numpy as np
+from numpy.random import randn
 
 from pandas.tslib import iNaT
-from pandas import compat
 
 _multiprocess_can_split_ = True
 
@@ -33,6 +33,7 @@ def test_is_sequence():
             return 1
 
     assert(not is_seq(A()))
+
 
 def test_notnull():
     assert notnull(1.)
@@ -99,6 +100,61 @@ def test_isnull_lists():
     assert(not result.any())
 
 
+def test_is_string():
+    class MyString(str):
+        pass
+
+    class MyUnicode(unicode):
+        pass
+
+    strings = ('s', np.str_('a'), np.unicode_('unicode_string'),
+               MyString('a _string blah'), u'asdf', MyUnicode(u'asdf'))
+    not_strings = [], 1, {}, set(), np.array(['1']), np.array([u'1'])
+
+    for string in strings:
+        assert com.is_string(string), '{0} is not a string'.format(string)
+
+    for not_string in not_strings:
+        assert not com.is_string(not_string), ('{0} is a '
+                                               'string'.format(not_string))
+
+
+def test_is_frame():
+    df = DataFrame(randn(2, 1))
+    assert com.is_frame(df)
+    assert not com.is_frame('s')
+
+
+def test_is_series():
+    s = Series(randn(2))
+    assert com.is_series(s)
+    assert not com.is_series(s.values)
+
+
+def test_is_panel():
+    p = Panel(randn(2, 3, 4))
+    assert com.is_panel(p)
+    assert not com.is_panel(2)
+
+
+def test_is_pd_obj():
+    df = DataFrame(randn(2, 1))
+    s = Series(randn(2))
+    p = Panel(randn(2, 3, 4))
+    for obj in (df, s, p):
+        assert com.is_pd_obj(obj)
+        assert not com.is_pd_obj(obj.values)
+
+
+def test_is_ndframe():
+    df = DataFrame(randn(2, 1))
+    p = Panel(randn(2, 3, 4))
+    # should add series after @jreback's ndframe to series pr
+    for obj in (df, p):
+        assert com.is_ndframe(obj)
+        assert not com.is_ndframe(obj.values)
+
+
 def test_isnull_datetime():
     assert (not isnull(datetime.now()))
     assert notnull(datetime.now())
@@ -113,10 +169,12 @@ def test_isnull_datetime():
     assert(mask[0])
     assert(not mask[1:].any())
 
+
 def test_datetimeindex_from_empty_datetime64_array():
     for unit in [ 'ms', 'us', 'ns' ]:
         idx = DatetimeIndex(np.array([], dtype='datetime64[%s]' % unit))
         assert(len(idx) == 0)
+
 
 def test_nan_to_nat_conversions():
 
@@ -135,6 +193,7 @@ def test_nan_to_nat_conversions():
     from distutils.version import LooseVersion
     if LooseVersion(np.__version__) >= '1.7.0':
         assert(result[8] == np.datetime64('NaT'))
+
 
 def test_any_none():
     assert(com._any_none(1, 2, 3, None))
@@ -299,6 +358,7 @@ def test_ensure_int32():
     values = np.arange(10, dtype=np.int64)
     result = com._ensure_int32(values)
     assert(result.dtype == np.int32)
+
 
 def test_ensure_platform_int():
 
@@ -781,6 +841,7 @@ class TestTake(unittest.TestCase):
         expected = arr.take(indexer, axis=1)
         expected[:, [2, 4]] = datetime(2007, 1, 1)
         tm.assert_almost_equal(result, expected)
+
 
 if __name__ == '__main__':
     nose.runmodule(argv=[__file__, '-vvs', '-x', '--pdb', '--pdb-failure'],
