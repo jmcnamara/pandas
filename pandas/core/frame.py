@@ -28,14 +28,15 @@ from pandas.core.common import (isnull, notnull, PandasError, _try_sort,
                                 _infer_dtype_from_scalar)
 from pandas.core.generic import NDFrame
 from pandas.core.index import Index, MultiIndex, _ensure_index
-from pandas.core.indexing import (_NDFrameIndexer, _maybe_droplevels,
-                                  _convert_to_index_sliceable, _check_bool_indexer,
-                                  _maybe_convert_indices)
+from pandas.core.indexing import (_maybe_droplevels,
+                                  _convert_to_index_sliceable,
+                                  _check_bool_indexer, _maybe_convert_indices)
 from pandas.core.internals import (BlockManager,
                                    create_block_manager_from_arrays,
                                    create_block_manager_from_blocks)
 from pandas.core.series import Series, _radd_compat
 import pandas.computation.expressions as expressions
+from pandas.computation.eval import eval as _eval
 from pandas.compat.scipy import scoreatpercentile as _quantile
 from pandas import compat
 from pandas.util.terminal import get_terminal_size
@@ -52,7 +53,6 @@ import pandas.core.generic as generic
 import pandas.core.nanops as nanops
 
 import pandas.lib as lib
-import pandas.tslib as tslib
 import pandas.algos as _algos
 
 from pandas.core.config import get_option, set_option
@@ -2049,6 +2049,18 @@ class DataFrame(NDFrame):
         if key.values.dtype != np.bool_:
             raise ValueError('Must pass DataFrame with boolean values only')
         return self.where(key)
+
+    def query(self, expr, **kwargs):
+        resolvers = kwargs.get('resolvers', None)
+        if resolvers is None:
+            index_resolvers = {}
+            if self.index.name is not None:
+                index_resolvers[self.index.name] = self.index
+            index_resolvers.update({'index': self.index,
+                                    'columns': self.columns})
+            resolvers = [self, index_resolvers]
+            kwargs.update({'resolvers': resolvers})
+        return self[_eval(expr, **kwargs)]
 
     def _slice(self, slobj, axis=0, raise_on_error=False):
         if axis == 0:
@@ -5540,7 +5552,8 @@ class DataFrame(NDFrame):
         """
         return self.mul(other, fill_value=1.)
 
-    def where(self, cond, other=NA, inplace=False, try_cast=False, raise_on_error=True):
+    def where(self, cond, other=NA, inplace=False, try_cast=False,
+              raise_on_error=True):
         """
         Return a DataFrame with the same shape as self and whose corresponding
         entries are from self where cond is True and otherwise are from other.
@@ -5612,6 +5625,7 @@ class DataFrame(NDFrame):
         wh: DataFrame
         """
         return self.where(~cond, NA)
+
 
 _EMPTY_SERIES = Series([])
 

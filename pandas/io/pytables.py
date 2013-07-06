@@ -31,6 +31,7 @@ from pandas.core.index import _ensure_index
 import pandas.core.common as com
 from pandas.tools.merge import concat
 from pandas.io.common import PerformanceWarning
+from pandas.computation.pytables import Expr
 
 import pandas.lib as lib
 import pandas.algos as algos
@@ -59,6 +60,21 @@ def _ensure_encoding(encoding):
             encoding = _default_encoding
     return encoding
 
+Term = Expr
+
+def _ensure_term(where):
+    """ ensure that the where is a Term or a list of Term
+        this makes sure that we are capturing the scope of variables
+        that are passed """
+
+    # create the terms here with a frame_level=2 (we are 2 levels down)
+    if isinstance(where, (list, tuple)):
+        where = [ w if isinstance(w, Term) else Term(w, scope_level=2) for w in where if w is not None ]
+    elif where is None or isinstance(where, Coordinates):
+        pass
+    elif not isinstance(where, Term):
+        where = Term(where, scope_level=2)
+    return where
 
 class PossibleDataLossError(Exception):
     pass
@@ -240,7 +256,7 @@ def read_hdf(path_or_buf, key, **kwargs):
     f(path_or_buf, False)
 
 
-class HDFStore(object):
+class HDFStore(StringMixin):
 
     """
     dict-like IO interface for storing pandas objects in PyTables
@@ -490,6 +506,7 @@ class HDFStore(object):
             raise KeyError('No object named %s in the file' % key)
 
         # create the storer and axes
+        where = _ensure_term(where)
         s = self._create_storer(group)
         s.infer_axes()
 
@@ -521,6 +538,7 @@ class HDFStore(object):
         start : integer (defaults to None), row number to start selection
         stop  : integer (defaults to None), row number to stop selection
         """
+        where = _ensure_term(where)
         return self.get_storer(key).read_coordinates(where=where, start=start, stop=stop, **kwargs)
 
     def unique(self, key, column, **kwargs):
@@ -566,6 +584,7 @@ class HDFStore(object):
         """
 
         # default to single select
+        where = _ensure_term(where)
         if isinstance(keys, (list, tuple)) and len(keys) == 1:
             keys = keys[0]
         if isinstance(keys, compat.string_types):
@@ -667,6 +686,7 @@ class HDFStore(object):
         raises KeyError if key is not a valid store
 
         """
+        where = _ensure_term(where)
         try:
             s = self.get_storer(key)
         except:
@@ -2924,8 +2944,8 @@ class Table(Storer):
             obj = obj.reindex_axis(labels, axis=axis)
 
         # apply the selection filters (but keep in the same order)
-        if self.selection.filter:
-            for field, op, filt in self.selection.filter:
+        if self.selection.filter is not None:
+            for field, op, filt in self.selection.filter.format():
 
                 def process_filter(field, filt):
 
@@ -4017,15 +4037,8 @@ class Selection(object):
             self.terms = self.generate(where)
 
             # create the numexpr & the filter
-            if self.terms:
-                terms = [t for t in self.terms if t.condition is not None]
-                if len(terms):
-                    self.condition = "(%s)" % ' & '.join(
-                        [t.condition for t in terms])
-                self.filter = []
-                for t in self.terms:
-                    if t.filter is not None:
-                        self.filter.append(t.filter)
+            if self.terms is not None:
+                self.condition, self.filter = self.terms.evaluate()
 
     def generate(self, where):
         """ where can be a : dict,list,tuple,string """
@@ -4051,7 +4064,7 @@ class Selection(object):
         generate the selection
         """
         if self.condition is not None:
-            return self.table.table.readWhere(self.condition, start=self.start, stop=self.stop)
+            return self.table.table.readWhere(self.condition.format(), start=self.start, stop=self.stop)
         elif self.coordinates is not None:
             return self.table.table.readCoordinates(self.coordinates)
         return self.table.table.read(start=self.start, stop=self.stop)
@@ -4063,7 +4076,7 @@ class Selection(object):
         if self.condition is None:
             return np.arange(self.table.nrows)
 
-        return self.table.table.getWhereList(self.condition, start=self.start, stop=self.stop, sort=True)
+        return self.table.table.getWhereList(self.condition.format(), start=self.start, stop=self.stop, sort=True)
 
 
 # utilities ###
