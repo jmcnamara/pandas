@@ -3,6 +3,7 @@ Misc tools for implementing data structures
 """
 
 import re
+import collections
 import codecs
 import csv
 
@@ -20,6 +21,7 @@ from pandas.compat import StringIO, BytesIO, range, long, u, zip, map
 from pandas.core.config import get_option
 from pandas.core import array as pa
 import pandas as pd
+
 
 # XXX: HACK for NumPy 1.5.1 to suppress warnings
 try:
@@ -203,6 +205,15 @@ def notnull(obj):
     if np.isscalar(res):
         return not res
     return -res
+
+
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not is_string(el):
+            for s in flatten(el):
+                yield s
+        else:
+            yield el
 
 
 def mask_missing(arr, values_to_mask):
