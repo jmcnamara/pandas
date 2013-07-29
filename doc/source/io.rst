@@ -1944,6 +1944,7 @@ The following are valid expressions:
 
    - ``'index>=date'``
    - ``"columns=['A', 'D']"``
+   - ``"columns in ['A', 'D']"``
    - ``'columns=A'``
    - ``'columns==A'``
    - ``"~(columns=['A','B'])"``
