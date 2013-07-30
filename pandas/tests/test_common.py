@@ -7,6 +7,7 @@ import unittest
 
 from pandas import (Series, DataFrame, date_range, DatetimeIndex, Timestamp,
                     Panel)
+from pandas import compat
 from pandas.compat import range, long, lrange, lmap, u
 from pandas.core.common import notnull, isnull
 import pandas.core.common as com
@@ -102,15 +103,18 @@ def test_isnull_lists():
 
 
 def test_is_string():
-    class MyString(str):
+    class MyUnicode(compat.text_type):
         pass
 
-    class MyUnicode(unicode):
-        pass
+    if not compat.PY3:
+        class MyString(str):
+            pass
+    else:
+        MyString = MyUnicode
 
     strings = ('s', np.str_('a'), np.unicode_('unicode_string'),
-               MyString('a _string blah'), u'asdf', MyUnicode(u'asdf'))
-    not_strings = [], 1, {}, set(), np.array(['1']), np.array([u'1'])
+               MyString('asdfasdfasdf'), u('asdf'), MyUnicode(u('asdf')))
+    not_strings = [], 1, {}, set(), np.array(['1']), np.array([u('1')])
 
     for string in strings:
         assert com.is_string(string), '{0} is not a string'.format(string)
