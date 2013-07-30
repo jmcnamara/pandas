@@ -39,9 +39,6 @@ from pandas.util.testing import (assert_almost_equal,
                                  assertRaisesRegexp,
                                  makeCustomDataframe as mkdf,
                                  ensure_clean)
-from pandas.util import py3compat
-from pandas.util.compat import OrderedDict
-from pandas.computation.expr import Expr
 import pandas.computation as comp
 
 import pandas.util.testing as tm
@@ -10765,7 +10762,8 @@ class TestDataFrameQuery(unittest.TestCase):
         self.skip_no_ne(engine)
         from pandas.computation.common import NameResolutionError
 
-        df = DataFrame({"i": range(10), "+": range(3, 13), "r": range(4, 14)})
+        df = DataFrame({"i": lrange(10),
+                        "+": lrange(3, 13), "r": lrange(4, 14)})
         i, s = 5, 6
         self.assertRaises(NameResolutionError, df.query, 'i < 5',
                           local_dict=locals(), global_dict=globals())
