@@ -16,7 +16,8 @@ import pandas.lib as lib
 import pandas.tslib as tslib
 
 from pandas import compat
-from pandas.compat import StringIO, BytesIO, range, long, u, zip, map, string_types
+from pandas.compat import (StringIO, BytesIO, range, long, u, zip, map,
+                           string_types)
 
 
 from pandas.core.config import get_option
@@ -209,6 +210,21 @@ def notnull(obj):
 
 
 def flatten(l):
+    """Flatten an arbitrarily nested sequence.
+
+    Parameters
+    ----------
+    l : sequence
+        The non string sequence to flatten
+
+    Notes
+    -----
+    This doesn't consider strings sequences.
+
+    Returns
+    -------
+    flattened : generator
+    """
     for el in l:
         if isinstance(el, collections.Iterable) and not is_string(el):
             for s in flatten(el):
