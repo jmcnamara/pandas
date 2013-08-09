@@ -320,18 +320,15 @@ class BaseExprVisitor(ast.NodeVisitor):
         self.preparser = preparser
 
     def visit(self, node, **kwargs):
-        parse = ast.parse
         if isinstance(node, string_types):
             clean = self.preparser(node)
-        elif isinstance(node, ast.AST):
-            clean = node
-        else:
+            node = ast.fix_missing_locations(ast.parse(clean))
+        elif not isinstance(node, ast.AST):
             raise TypeError("Cannot visit objects of type {0!r}"
                             "".format(node.__class__.__name__))
-        node = parse(clean)
 
         method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, None)
+        visitor = getattr(self, method)
         return visitor(node, **kwargs)
 
     def visit_Module(self, node, **kwargs):
@@ -365,7 +362,8 @@ class BaseExprVisitor(ast.NodeVisitor):
         return self.const_type(node.n, self.env)
 
     def visit_Str(self, node, **kwargs):
-        return self.const_type(node.s, self.env)
+        name = self.env.add_tmp(node.s)
+        return self.term_type(name, self.env)
 
     def visit_List(self, node, **kwargs):
         return self.const_type([self.visit(e).value for e in node.elts],
