@@ -465,7 +465,7 @@ class BaseExprVisitor(ast.NodeVisitor):
         comps = node.comparators
 
         def translate(op):
-            if isinstance(op,ast.In):
+            if isinstance(op, ast.In):
                 return ast.Eq()
             return op
 
@@ -500,8 +500,8 @@ class BaseExprVisitor(ast.NodeVisitor):
         return reduce(visitor, operands)
 
 
-_python_not_supported = frozenset(['Assign', 'Str', 'Tuple', 'List', 'Dict',
-                                   'Call', 'BoolOp'])
+_python_not_supported = frozenset(['Assign', 'Tuple', 'Dict', 'Call',
+                                   'BoolOp'])
 _numexpr_supported_calls = frozenset(_reductions + _mathops)
 
 
