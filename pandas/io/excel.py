@@ -341,21 +341,21 @@ class ExcelWriter(object):
     path : string
         Path to xls file
     """
-    def __init__(self, path):
-        self.use_xlsx = True
-        if path.endswith('.xls'):
+    def __init__(self, path, options=None):
+
+        # Options for the different Excel writers.
+        if options is None:
+            options = {}
+
+        if options.get('use_xlsxwriter'):
+            pass
+        elif path.endswith('.xls'):
             self.use_xlsx = False
-            import xlwt
-            self.book = xlwt.Workbook()
-            self.fm_datetime = xlwt.easyxf(
-                num_format_str='YYYY-MM-DD HH:MM:SS')
-            self.fm_date = xlwt.easyxf(num_format_str='YYYY-MM-DD')
+            self._use_xlwt()
         else:
-            from openpyxl.workbook import Workbook
-            self.book = Workbook()  # optimized_write=True)
-            # open pyxl 1.6.1 adds a dummy sheet remove it
-            if self.book.worksheets:
-                self.book.remove_sheet(self.book.worksheets[0])
+            self.use_xlsx = True
+            self._use_openpyxl()
+
         self.path = path
         self.sheets = {}
         self.cur_sheet = None
@@ -464,3 +464,19 @@ class ExcelWriter(object):
                 wks.write(startrow + cell.row,
                           startcol + cell.col,
                           val, style)
+
+    def _use_xlwt(self):
+        # Use the xlwt module as the Excel writer.
+        import xlwt
+        self.book = xlwt.Workbook()
+        self.fm_datetime = xlwt.easyxf(num_format_str='YYYY-MM-DD HH:MM:SS')
+        self.fm_date = xlwt.easyxf(num_format_str='YYYY-MM-DD')
+
+    def _use_openpyxl(self):
+        # Use the openpyxl module as the Excel writer.
+        from openpyxl.workbook import Workbook
+        # Create workbook object with default optimized_write=True.
+        self.book = Workbook()
+        # Openpyxl 1.6.1 adds a dummy sheet. We remove it.
+        if self.book.worksheets:
+            self.book.remove_sheet(self.book.worksheets[0])
