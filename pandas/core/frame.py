@@ -1358,7 +1358,8 @@ class DataFrame(NDFrame):
 
     def to_excel(self, excel_writer, sheet_name='Sheet1', na_rep='',
                  float_format=None, cols=None, header=True, index=True,
-                 index_label=None, startrow=0, startcol=0):
+                 index_label=None, startrow=0, startcol=0,
+                 writer_options=None):
         """
         Write DataFrame to a excel sheet
 
@@ -1385,6 +1386,7 @@ class DataFrame(NDFrame):
             sequence should be given if the DataFrame uses MultiIndex.
         startow : upper left cell row to dump data frame
         startcol : upper left cell column to dump data frame
+        writer_options : options to pass to the Excel writer object
 
 
         Notes
@@ -1400,7 +1402,7 @@ class DataFrame(NDFrame):
         from pandas.io.excel import ExcelWriter
         need_save = False
         if isinstance(excel_writer, compat.string_types):
-            excel_writer = ExcelWriter(excel_writer)
+            excel_writer = ExcelWriter(excel_writer, writer_options)
             need_save = True
 
         formatter = fmt.ExcelFormatter(self,
