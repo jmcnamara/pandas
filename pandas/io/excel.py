@@ -253,7 +253,7 @@ class CellStyleConverter(object):
         import xlwt
 
         def style_to_xlwt(item, firstlevel=True, field_sep=',', line_sep=';'):
-            """helper wich recursively generate an xlwt easy style string
+            """helper which recursively generate an xlwt easy style string
             for example:
 
               hstyle = {"font": {"bold": True},
@@ -316,6 +316,37 @@ class CellStyleConverter(object):
         return xls_style
 
 
+    @staticmethod
+    def to_xlsxwriter(workbook, style_dict, num_format_str=None):
+        """
+        Converts a style_dict to an XlxsWriter format object.
+        Parameters
+        ----------
+        workbook:   Reference to the ExcelWriter XlxsWriter workbook.
+        style_dict: Style dictionary to convert.
+        num_format: Optional number format for the cell format.
+        """
+        if style_dict is None:
+            return None
+
+        # Create a XlsxWriter format object.
+        xl_format = workbook.add_format()
+
+        # Map the cell font to XlsxWriter font properties. TODO add more.
+        if style_dict.get('font'):
+            font = style_dict['font']
+            if font.get('bold'):
+                xl_format.set_bold()
+
+        # Map the cell borders to XlsxWriter border properties. TODO add more.
+        if style_dict.get('borders'):
+            xl_format.set_border()
+
+        if num_format_str is not None:
+            xl_format.set_num_format(num_format_str)
+
+        return xl_format
+
 def _conv_value(val):
     # convert value for excel dump
     if isinstance(val, np.int64):
@@ -338,14 +369,14 @@ class ExcelWriter(object):
     path : string
         Path to xls file
     """
-    def __init__(self, path, options=None):
+    def __init__(self, path, writer_options=None):
 
         # Options for the different Excel writers.
-        if options is None:
-            options = {}
+        if writer_options is None:
+            writer_options = {}
 
-        if options.get('use_xlsxwriter'):
-            self._init_xlsxwriter(path)
+        if writer_options.get('use_xlsxwriter'):
+            self._init_xlsxwriter(path, writer_options)
         elif path.endswith('.xls'):
             self._init_xlwt()
         else:
@@ -490,11 +521,10 @@ class ExcelWriter(object):
             if stylekey in style_dict:
                 style = style_dict[stylekey]
             else:
-                style = CellStyleConverter.to_xls(cell.style, num_format_str)
+                style = CellStyleConverter.to_xlsxwriter(self.book,
+                                                         cell.style,
+                                                         num_format_str)
                 style_dict[stylekey] = style
-
-            # TODO
-            style = None
 
             if cell.mergestart is not None and cell.mergeend is not None:
                 wks.merge_range(startrow + cell.row,
@@ -525,8 +555,13 @@ class ExcelWriter(object):
         if self.book.worksheets:
             self.book.remove_sheet(self.book.worksheets[0])
 
-    def _init_xlsxwriter(self, filename):
+    def _init_xlsxwriter(self, filename, writer_options):
         # Use the xlsxwriter module as the Excel writer.
+
+        options = dict(writer_options)
+
+        options.setdefault('default_date_format', 'YYYY-MM-DD HH:MM:SS')
+
         self.writer_class = 'xlsxwriter'
         import xlsxwriter
-        self.book = xlsxwriter.Workbook(filename)
+        self.book = xlsxwriter.Workbook(filename, options)
