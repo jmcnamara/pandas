@@ -29,7 +29,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
         self.ignore_elements = {}
 
     def test_to_excel(self):
-        """Test the creation of a simple workbook using to_excel."""
+        """Test the creation of a simple workbook using to_excel()."""
         filename = self.got_filename
 
         ####################################################
@@ -41,7 +41,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
                     sheet_name='Sheet1',
                     header=False,
                     index=False,
-                    writer_options={'use_xlsxwriter': True})
+                    engine='xlsxwriter')
 
         ####################################################
 
@@ -53,7 +53,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
         self.assertEqual(got, exp)
 
     def test_excelwriter_to_excel(self):
-        """Test the creation of a simple workbook using ExcelWriter."""
+        """Test the creation of a simple workbook using ExcelWriter()."""
         filename = self.got_filename
 
         ####################################################
@@ -61,14 +61,68 @@ class TestCompareXLSXFiles(unittest.TestCase):
         df = DataFrame({'A': [10, 11, 12, 13],
                         'B': ['foo', 'bar', 'bin', 'boo']})
 
-        writer = ExcelWriter(filename,
-                             writer_options={'use_xlsxwriter': True})
+        writer = ExcelWriter(filename, engine='xlsxwriter')
 
         df.to_excel(writer,
                     sheet_name='Sheet1',
                     header=False,
-                    index=False,
-                    writer_options={'use_xlsxwriter': True})
+                    index=False)
+
+        writer.save()
+
+        ####################################################
+
+        got, exp = _compare_xlsx_files(self.got_filename,
+                                       self.exp_filename,
+                                       self.ignore_files,
+                                       self.ignore_elements)
+
+        self.assertEqual(got, exp)
+
+    def test_to_excel_with_config(self):
+        """Test workbook creation using to_excel() and pandas.config."""
+        filename = self.got_filename
+
+        ####################################################
+
+        from pandas.core import config
+        config.set_option('io.excel.engine', 'xlsxwriter')
+
+        df = DataFrame({'A': [10, 11, 12, 13],
+                        'B': ['foo', 'bar', 'bin', 'boo']})
+
+        df.to_excel(filename,
+                    sheet_name='Sheet1',
+                    header=False,
+                    index=False)
+
+        ####################################################
+
+        got, exp = _compare_xlsx_files(self.got_filename,
+                                       self.exp_filename,
+                                       self.ignore_files,
+                                       self.ignore_elements)
+
+        self.assertEqual(got, exp)
+
+    def test_excelwriter_to_excel_with_config(self):
+        """Test workbook creation using ExcelWriter() and pandas.config."""
+        filename = self.got_filename
+
+        ####################################################
+
+        from pandas.core import config
+        config.set_option('io.excel.engine', 'xlsxwriter')
+
+        df = DataFrame({'A': [10, 11, 12, 13],
+                        'B': ['foo', 'bar', 'bin', 'boo']})
+
+        writer = ExcelWriter(filename)
+
+        df.to_excel(writer,
+                    sheet_name='Sheet1',
+                    header=False,
+                    index=False)
 
         writer.save()
 
