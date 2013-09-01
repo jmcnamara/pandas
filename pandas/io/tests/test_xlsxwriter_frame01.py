@@ -6,6 +6,7 @@
 import unittest
 import os
 from pandas.core.api import DataFrame
+import pandas.util.testing as testutil
 from pandas.io.excel import ExcelWriter
 from .xlsxwriter_test_helper import _compare_xlsx_files
 
@@ -20,10 +21,9 @@ class TestCompareXLSXFiles(unittest.TestCase):
         self.maxDiff = None
 
         filename = 'xw_frame01.xlsx'
-
-        test_dir = 'pandas/io/tests/'
+        test_dir = testutil.get_data_path()
         self.got_filename = test_dir + '_test_' + filename
-        self.exp_filename = test_dir + 'data/' + filename
+        self.exp_filename = test_dir + filename
 
         self.ignore_files = []
         self.ignore_elements = {}
