@@ -94,7 +94,7 @@ except:
 
 try:
     import xlsxwriter
-    print("xlsxwriter: %s" % xlsxwriter.__VERSION__)
+    print("xlsxwriter: %s" % xlsxwriter.__version__)
 except:
     print("xlwt: Not installed")
 
