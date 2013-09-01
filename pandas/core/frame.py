@@ -1359,7 +1359,7 @@ class DataFrame(NDFrame):
     def to_excel(self, excel_writer, sheet_name='Sheet1', na_rep='',
                  float_format=None, cols=None, header=True, index=True,
                  index_label=None, startrow=0, startcol=0,
-                 writer_options=None):
+                 engine=None):
         """
         Write DataFrame to a excel sheet
 
@@ -1402,7 +1402,7 @@ class DataFrame(NDFrame):
         from pandas.io.excel import ExcelWriter
         need_save = False
         if isinstance(excel_writer, compat.string_types):
-            excel_writer = ExcelWriter(excel_writer, writer_options)
+            excel_writer = ExcelWriter(excel_writer, engine)
             need_save = True
 
         formatter = fmt.ExcelFormatter(self,

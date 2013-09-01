@@ -12,8 +12,18 @@ from pandas.io.parsers import TextParser
 from pandas.tseries.period import Period
 from pandas import json
 from pandas.compat import map, zip, reduce, range, lrange
+from pandas.core import config
 import pandas.compat as compat
 from warnings import warn
+
+# Set up the io.excel specific configuration.
+engine_doc = """
+: string
+    The default Excel engine. The options are 'openpyxl' (the default), 'xlwt'
+    and 'xlsxwriter'.
+"""
+with config.config_prefix('io.excel'):
+    config.register_option('engine', 'openpyxl', engine_doc, validator=str)
 
 
 def read_excel(path_or_buf, sheetname, **kwds):
@@ -318,7 +328,6 @@ class CellStyleConverter(object):
 
         return xls_style
 
-
     @staticmethod
     def to_xlsxwriter(workbook, style_dict, num_format_str=None):
         """
@@ -350,6 +359,7 @@ class CellStyleConverter(object):
 
         return xl_format
 
+
 def _conv_value(val):
     # convert value for excel dump
     if isinstance(val, np.int64):
@@ -372,15 +382,14 @@ class ExcelWriter(object):
     path : string
         Path to xls file
     """
-    def __init__(self, path, writer_options=None):
+    def __init__(self, path, engine=None):
 
-        # Options for the different Excel writers.
-        if writer_options is None:
-            writer_options = {}
+        if engine is None:
+            engine = config.get_option('io.excel.engine')
 
-        if writer_options.get('use_xlsxwriter'):
-            self._init_xlsxwriter(path, writer_options)
-        elif path.endswith('.xls'):
+        if engine == 'xlsxwriter':
+            self._init_xlsxwriter(path)
+        elif engine == 'xlwt' or path.endswith('.xls'):
             self._init_xlwt()
         else:
             self._init_openpyxl()
@@ -558,10 +567,13 @@ class ExcelWriter(object):
         if self.book.worksheets:
             self.book.remove_sheet(self.book.worksheets[0])
 
-    def _init_xlsxwriter(self, filename, writer_options):
+    def _init_xlsxwriter(self, filename, writer_options=None):
         # Use the xlsxwriter module as the Excel writer.
 
-        options = dict(writer_options)
+        if writer_options is None:
+            options = {}
+        else:
+            options = dict(writer_options)
 
         options.setdefault('default_date_format', 'YYYY-MM-DD HH:MM:SS')
 
