@@ -22,7 +22,7 @@ engine_doc = """
     and 'xlsxwriter'.
 """
 with config.config_prefix('io.excel'):
-    config.register_option('engine', 'openpyxl', engine_doc, validator=str)
+    config.register_option('engine', None, engine_doc, validator=str)
 
 
 def read_excel(path_or_buf, sheetname, kind=None, **kwds):
@@ -379,19 +379,24 @@ class ExcelWriter(object):
     path : string
         Path to xls file
     """
-    def __init__(self, path, engine=None):
+    def __init__(self, path, engine=None, **engine_kwargs):
 
         if engine is None:
-            engine = config.get_option('io.excel.engine')
+            default = config.get_option('io.excel.engine')
+            if default is not None:
+                engine = default
+            elif path.endswith('.xls'):
+                engine = 'xlwt'
+            else:
+                engine = 'openpyxl'
 
-        if engine == 'xlsxwriter':
-            self._init_xlsxwriter(path)
-        elif engine == 'xlwt' or path.endswith('.xls'):
-            self._init_xlwt()
-        else:
-            self._init_openpyxl()
+        try:
+            writer_init = getattr(self, "_init_%s" % engine)
+        except AttributeError:
+            raise ValueError("No engine: %s" % engine)
 
-        self.path = path
+        writer_init(path, **engine_kwargs)
+
         self.sheets = {}
         self.cur_sheet = None
 
@@ -399,7 +404,7 @@ class ExcelWriter(object):
         """
         Save workbook to disk
         """
-        if self.writer_class == 'xlsxwriter':
+        if self.engine == 'xlsxwriter':
             self.book.close()
         else:
             self.book.save(self.path)
@@ -419,18 +424,20 @@ class ExcelWriter(object):
         """
         if sheet_name is None:
             sheet_name = self.cur_sheet
+
         if sheet_name is None:  # pragma: no cover
             raise Exception('Must pass explicit sheet_name or set '
                             'cur_sheet property')
-        if self.writer_class == 'xlsxwriter':
-            self._writecells_xlsxwriter(cells, sheet_name, startrow, startcol)
-        elif self.writer_class == 'openpyxl':
-            self._writecells_openpyxl(cells, sheet_name, startrow, startcol)
-        else:
-            self._writecells_xlwt(cells, sheet_name, startrow, startcol)
+
+        try:
+            _writecells = getattr(self, "_writecells_%s" % self.engine)
+        except AttributeError:
+            raise ValueError("No _writecells_%s() method" % self.engine)
+
+        _writecells(cells, sheet_name, startrow, startcol)
 
     def _writecells_openpyxl(self, cells, sheet_name, startrow, startcol):
-
+        # Write the frame cells using openpyxl.
         from openpyxl.cell import get_column_letter
 
         if sheet_name in self.sheets:
@@ -467,6 +474,7 @@ class ExcelWriter(object):
                                                startrow + cell.mergestart + 1))
 
     def _writecells_xlwt(self, cells, sheet_name, startrow, startcol):
+        # Write the frame cells using xlwt.
         if sheet_name in self.sheets:
             wks = self.sheets[sheet_name]
         else:
@@ -506,6 +514,7 @@ class ExcelWriter(object):
                           val, style)
 
     def _writecells_xlsxwriter(self, cells, sheet_name, startrow, startcol):
+        # Write the frame cells using xlsxwriter.
         if sheet_name in self.sheets:
             wks = self.sheets[sheet_name]
         else:
@@ -546,34 +555,35 @@ class ExcelWriter(object):
                           startcol + cell.col,
                           val, style)
 
-    def _init_xlwt(self):
+    def _init_xlwt(self, filename, **engine_kwargs):
         # Use the xlwt module as the Excel writer.
-        self.writer_class = 'xlwt'
         import xlwt
+
+        self.engine = 'xlwt'
+        self.path = filename
         self.book = xlwt.Workbook()
         self.fm_datetime = xlwt.easyxf(num_format_str='YYYY-MM-DD HH:MM:SS')
         self.fm_date = xlwt.easyxf(num_format_str='YYYY-MM-DD')
 
-    def _init_openpyxl(self):
+    def _init_openpyxl(self, filename, **engine_kwargs):
         # Use the openpyxl module as the Excel writer.
-        self.writer_class = 'openpyxl'
         from openpyxl.workbook import Workbook
+
+        self.engine = 'openpyxl'
+        self.path = filename
         # Create workbook object with default optimized_write=True.
         self.book = Workbook()
         # Openpyxl 1.6.1 adds a dummy sheet. We remove it.
         if self.book.worksheets:
             self.book.remove_sheet(self.book.worksheets[0])
 
-    def _init_xlsxwriter(self, filename, writer_options=None):
+    def _init_xlsxwriter(self, filename, **engine_kwargs):
         # Use the xlsxwriter module as the Excel writer.
+        import xlsxwriter
 
-        if writer_options is None:
-            options = {}
-        else:
-            options = dict(writer_options)
+        options = dict(engine_kwargs)
 
         options.setdefault('default_date_format', 'YYYY-MM-DD HH:MM:SS')
 
-        self.writer_class = 'xlsxwriter'
-        import xlsxwriter
+        self.engine = 'xlsxwriter'
         self.book = xlsxwriter.Workbook(filename, options)
