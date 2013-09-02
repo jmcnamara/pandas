@@ -1386,7 +1386,7 @@ class DataFrame(NDFrame):
             sequence should be given if the DataFrame uses MultiIndex.
         startow : upper left cell row to dump data frame
         startcol : upper left cell column to dump data frame
-        writer_options : options to pass to the Excel writer object
+        engine : Excel writer class
 
 
         Notes
