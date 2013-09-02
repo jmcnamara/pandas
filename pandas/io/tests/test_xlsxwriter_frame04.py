@@ -8,6 +8,7 @@ import os
 from pandas.core.api import DataFrame
 import pandas.util.testing as testutil
 from pandas.io.excel import ExcelWriter
+from numpy import nan
 from .xlsxwriter_test_helper import _compare_xlsx_files
 
 
@@ -20,7 +21,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
-        filename = 'xw_frame01.xlsx'
+        filename = 'xw_frame04.xlsx'
         test_dir = testutil.get_data_path()
         self.got_filename = test_dir + '_test_' + filename
         self.exp_filename = test_dir + filename
@@ -34,8 +35,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         ####################################################
 
-        df = DataFrame({'A': [10, 11, 12, 13],
-                        'B': [2, 4, 6, 8]})
+        df = DataFrame({'A': [nan, 11, 12, 13],
+                        'B': [2, 4, nan, 8]})
 
         df.to_excel(filename,
                     sheet_name='Sheet1',
@@ -58,8 +59,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         ####################################################
 
-        df = DataFrame({'A': [10, 11, 12, 13],
-                        'B': [2, 4, 6, 8]})
+        df = DataFrame({'A': [nan, 11, 12, 13],
+                        'B': [2, 4, nan, 8]})
 
         writer = ExcelWriter(filename, engine='xlsxwriter')
 
@@ -88,8 +89,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
         from pandas.core import config
         config.set_option('io.excel.engine', 'xlsxwriter')
 
-        df = DataFrame({'A': [10, 11, 12, 13],
-                        'B': [2, 4, 6, 8]})
+        df = DataFrame({'A': [nan, 11, 12, 13],
+                        'B': [2, 4, nan, 8]})
 
         df.to_excel(filename,
                     sheet_name='Sheet1',
@@ -114,8 +115,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
         from pandas.core import config
         config.set_option('io.excel.engine', 'xlsxwriter')
 
-        df = DataFrame({'A': [10, 11, 12, 13],
-                        'B': [2, 4, 6, 8]})
+        df = DataFrame({'A': [nan, 11, 12, 13],
+                        'B': [2, 4, nan, 8]})
 
         writer = ExcelWriter(filename)
 

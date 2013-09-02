@@ -20,7 +20,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
-        filename = 'xw_frame01.xlsx'
+        filename = 'xw_frame06.xlsx'
         test_dir = testutil.get_data_path()
         self.got_filename = test_dir + '_test_' + filename
         self.exp_filename = test_dir + filename
@@ -39,8 +39,9 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         df.to_excel(filename,
                     sheet_name='Sheet1',
-                    header=False,
-                    index=False,
+                    header=True,
+                    index=True,
+                    index_label='Foo',
                     engine='xlsxwriter')
 
         ####################################################
@@ -65,8 +66,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         df.to_excel(writer,
                     sheet_name='Sheet1',
-                    header=False,
-                    index=False)
+                    index_label='Foo',)
 
         writer.save()
 
@@ -93,8 +93,9 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         df.to_excel(filename,
                     sheet_name='Sheet1',
-                    header=False,
-                    index=False)
+                    header=True,
+                    index=True,
+                    index_label='Foo')
 
         ####################################################
 
@@ -121,8 +122,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         df.to_excel(writer,
                     sheet_name='Sheet1',
-                    header=False,
-                    index=False)
+                    index_label='Foo')
 
         writer.save()
 
