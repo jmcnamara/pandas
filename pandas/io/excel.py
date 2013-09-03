@@ -344,13 +344,13 @@ class CellStyleConverter(object):
         # Create a XlsxWriter format object.
         xl_format = workbook.add_format()
 
-        # Map the cell font to XlsxWriter font properties. TODO add more.
+        # Map the cell font to XlsxWriter font properties.
         if style_dict.get('font'):
             font = style_dict['font']
             if font.get('bold'):
                 xl_format.set_bold()
 
-        # Map the cell borders to XlsxWriter border properties. TODO add more.
+        # Map the cell borders to XlsxWriter border properties.
         if style_dict.get('borders'):
             xl_format.set_border()
 
