@@ -90,7 +90,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
         ####################################################
 
         from pandas.core import config
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
 
         df = DataFrame({'A': [10, 11, 12, 13],
                         'B': [2, 4, 6, 8]})
@@ -118,7 +118,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
         ####################################################
 
         from pandas.core import config
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
 
         df = DataFrame({'A': [10, 11, 12, 13],
                         'B': [2, 4, 6, 8]})

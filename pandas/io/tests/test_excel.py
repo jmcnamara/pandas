@@ -333,9 +333,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension(self, ext):
         path = '__tmp_to_excel_from_excel__.' + ext
@@ -387,9 +387,9 @@ class ExcelTests(unittest.TestCase):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
 
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_mixed('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_mixed(self, ext):
         path = '__tmp_to_excel_from_excel_mixed__.' + ext
@@ -414,9 +414,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_tsframe(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_tsframe('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_tsframe(self, ext):
         path = '__tmp_to_excel_from_excel_tsframe__.' + ext
@@ -440,9 +440,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_int64(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_int64('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_int64(self, ext):
         path = '__tmp_to_excel_from_excel_int64__.' + ext
@@ -473,9 +473,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_bool(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_bool('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_bool(self, ext):
         path = '__tmp_to_excel_from_excel_bool__.' + ext
@@ -506,9 +506,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_sheets(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_sheets('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_sheets(self, ext):
         path = '__tmp_to_excel_from_excel_sheets__.' + ext
@@ -546,9 +546,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_colaliases(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_colaliases('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_colaliases(self, ext):
         path = '__tmp_to_excel_from_excel_aliases__.' + ext
@@ -581,9 +581,9 @@ class ExcelTests(unittest.TestCase):
     def test_excel_roundtrip_xlsxwriter_indexlabels(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_extension_indexlabels('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_extension_indexlabels(self, ext):
         path = '__tmp_to_excel_from_excel_indexlabels__.' + ext
@@ -715,9 +715,9 @@ class ExcelTests(unittest.TestCase):
     def test_to_excel_multiindex_xlsxwriter(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_excel_multiindex('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_excel_multiindex(self, ext):
         path = '__tmp_to_excel_multiindex__' + ext + '__.' + ext
@@ -754,9 +754,9 @@ class ExcelTests(unittest.TestCase):
     def test_to_excel_multiindex_xlsxwriter_dates(self):
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
-        config.set_option('io.excel.engine', 'xlsxwriter')
+        config.set_option('io.excel.writer_engine', 'xlsxwriter')
         self._check_excel_multiindex_dates('xlsx')
-        config.set_option('io.excel.engine', None)
+        config.set_option('io.excel.writer_engine', None)
 
     def _check_excel_multiindex_dates(self, ext):
         path = '__tmp_to_excel_multiindex_dates__' + ext + '__.' + ext
