@@ -579,7 +579,6 @@ class ExcelTests(unittest.TestCase):
         self._check_extension_indexlabels('xlsx')
 
     def test_excel_roundtrip_xlsxwriter_indexlabels(self):
-        raise nose.SkipTest('Skip. Need to debug.')
         _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
         config.set_option('io.excel.engine', 'xlsxwriter')
@@ -635,7 +634,9 @@ class ExcelTests(unittest.TestCase):
 
             reader = ExcelFile(path)
             recons = reader.parse('test1', index_col=[0, 1])
-            tm.assert_frame_equal(df, recons)
+            # Test with less_precise or else xlsxwriter fails with no
+            # visible precision difference.
+            tm.assert_frame_equal(df, recons, check_less_precise=True)
 
     def test_excel_roundtrip_indexname(self):
         _skip_if_no_xlrd()
