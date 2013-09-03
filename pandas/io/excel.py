@@ -26,6 +26,15 @@ with config.config_prefix('io.excel'):
     config.register_option('writer_engine', None, writer_engine_doc,
                             validator=str)
 
+# Set up the io.excel specific configuration.
+engine_doc = """
+: string
+    The default Excel engine. The options are 'openpyxl' (the default), 'xlwt'
+    and 'xlsxwriter'.
+"""
+with config.config_prefix('io.excel'):
+    config.register_option('engine', None, engine_doc, validator=str)
+
 
 def read_excel(path_or_buf, sheetname, **kwds):
     """Read an Excel table into a pandas DataFrame
@@ -387,6 +396,7 @@ class ExcelWriter(object):
 
         if engine is None:
             default = config.get_option('io.excel.writer_engine')
+
             if default is not None:
                 engine = default
             elif path.endswith('.xls'):
