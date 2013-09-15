@@ -38,6 +38,23 @@ import pandas.tseries.tools as tools
 from numpy.testing.decorators import slow
 
 from pandas.parser import OverflowError
+from pandas import set_option, get_option
+
+
+# Decorator to simplify setting and resetting xlsxwriter as an engine option.
+def set_xlsxwriter_as_writer(fn):
+    def wrapper(*args):
+        previous = get_option('io.excel.xlsx.writer')
+        set_option('io.excel.xlsx.writer', 'xlsxwriter')
+        try:
+            fn(*args)
+            set_option('io.excel.xlsx.writer', previous)
+        except:
+            set_option('io.excel.xlsx.writer', previous)
+            raise
+
+    return wrapper
+
 
 def _skip_if_no_xlrd():
     try:
@@ -61,6 +78,13 @@ def _skip_if_no_openpyxl():
         import openpyxl
     except ImportError:
         raise nose.SkipTest('openpyxl not installed, skipping')
+
+
+def _skip_if_no_xlsxwriter():
+    try:
+        import xlsxwriter
+    except ImportError:
+        raise nose.SkipTest('xlsxwriter not installed, skipping')
 
 
 def _skip_if_no_excelsuite():
@@ -240,8 +264,7 @@ class ExcelTests(unittest.TestCase):
             self.assertRaises(xlrd.XLRDError, xl.parse, '0')
 
     def test_excel_sheet_by_name_raise(self):
-        _skip_if_no_xlrd()
-        _skip_if_no_xlwt()
+        _skip_if_no_excelsuite()
         for ext in ('xls', 'xlsx'):
             self.check_excel_sheet_by_name_raise(ext)
 
@@ -323,6 +346,12 @@ class ExcelTests(unittest.TestCase):
         _skip_if_no_excelsuite()
         self._check_extension('xlsx')
 
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+        self._check_extension('xlsx')
+
     def _check_extension(self, ext):
         path = '__tmp_to_excel_from_excel__.' + ext
 
@@ -369,6 +398,13 @@ class ExcelTests(unittest.TestCase):
 
         self._check_extension_mixed('xlsx')
 
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_mixed(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+
+        self._check_extension_mixed('xlsx')
+
     def _check_extension_mixed(self, ext):
         path = '__tmp_to_excel_from_excel_mixed__.' + ext
 
@@ -389,6 +425,12 @@ class ExcelTests(unittest.TestCase):
         _skip_if_no_xlrd()
         self._check_extension_tsframe('xlsx')
 
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_tsframe(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+        self._check_extension_tsframe('xlsx')
+
     def _check_extension_tsframe(self, ext):
         path = '__tmp_to_excel_from_excel_tsframe__.' + ext
 
@@ -406,6 +448,12 @@ class ExcelTests(unittest.TestCase):
 
     def test_excel_roundtrip_xlsx_int64(self):
         _skip_if_no_excelsuite()
+        self._check_extension_int64('xlsx')
+
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_int64(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
         self._check_extension_int64('xlsx')
 
     def _check_extension_int64(self, ext):
@@ -434,6 +482,12 @@ class ExcelTests(unittest.TestCase):
         _skip_if_no_excelsuite()
         self._check_extension_bool('xlsx')
 
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_bool(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+        self._check_extension_bool('xlsx')
+
     def _check_extension_bool(self, ext):
         path = '__tmp_to_excel_from_excel_bool__.' + ext
 
@@ -458,6 +512,12 @@ class ExcelTests(unittest.TestCase):
 
     def test_excel_roundtrip_xlsx_sheets(self):
         _skip_if_no_excelsuite()
+        self._check_extension_sheets('xlsx')
+
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_sheets(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
         self._check_extension_sheets('xlsx')
 
     def _check_extension_sheets(self, ext):
@@ -493,6 +553,12 @@ class ExcelTests(unittest.TestCase):
         _skip_if_no_excelsuite()
         self._check_extension_colaliases('xlsx')
 
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_colaliases(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+        self._check_extension_colaliases('xlsx')
+
     def _check_extension_colaliases(self, ext):
         path = '__tmp_to_excel_from_excel_aliases__.' + ext
 
@@ -519,6 +585,12 @@ class ExcelTests(unittest.TestCase):
 
     def test_excel_roundtrip_xlsx_indexlabels(self):
         _skip_if_no_excelsuite()
+        self._check_extension_indexlabels('xlsx')
+
+    @set_xlsxwriter_as_writer
+    def test_excel_roundtrip_xlsxwriter_indexlabels(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
         self._check_extension_indexlabels('xlsx')
 
     def _check_extension_indexlabels(self, ext):
@@ -557,7 +629,7 @@ class ExcelTests(unittest.TestCase):
             self.assertEqual(frame.index.names, recons.index.names)
 
         # test index_labels in same row as column names
-        path = '%s.xls' % tm.rands(10)
+        path = '%s.%s' % (tm.rands(10), ext)
 
         with ensure_clean(path) as path:
 
@@ -570,7 +642,7 @@ class ExcelTests(unittest.TestCase):
 
             reader = ExcelFile(path)
             recons = reader.parse('test1', index_col=[0, 1])
-            tm.assert_frame_equal(df, recons)
+            tm.assert_frame_equal(df, recons, check_less_precise=True)
 
     def test_excel_roundtrip_indexname(self):
         _skip_if_no_xlrd()
@@ -649,7 +721,6 @@ class ExcelTests(unittest.TestCase):
         func = lambda: df.to_excel('something.test')
         check_called(func)
         check_called(lambda: panel.to_excel('something.test'))
-        from pandas import set_option, get_option
         val = get_option('io.excel.xlsx.writer')
         set_option('io.excel.xlsx.writer', 'dummy')
         check_called(lambda: df.to_excel('something.xlsx'))
@@ -673,6 +744,21 @@ class ExcelTests(unittest.TestCase):
                 rs = reader.parse('sht1', index_col=0, parse_dates=True)
                 tm.assert_frame_equal(xp, rs.to_period('M'))
 
+    def test_to_excel_periodindex_xlsxwriter(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+
+        path = '__tmp_to_excel_periodindex__.xlsx'
+        frame = self.tsframe
+        xp = frame.resample('M', kind='period')
+
+        with ensure_clean(path) as path:
+            xp.to_excel(path, 'sht1', engine='xlsxwriter')
+
+            reader = ExcelFile(path)
+            rs = reader.parse('sht1', index_col=0, parse_dates=True)
+            tm.assert_frame_equal(xp, rs.to_period('M'))
+
     def test_to_excel_multiindex(self):
         _skip_if_no_xlrd()
         _skip_if_no_xlwt()
@@ -682,6 +768,12 @@ class ExcelTests(unittest.TestCase):
     def test_to_excel_multiindex_xlsx(self):
         _skip_if_no_xlrd()
         _skip_if_no_openpyxl()
+        self._check_excel_multiindex('xlsx')
+
+    @set_xlsxwriter_as_writer
+    def test_to_excel_multiindex_xlsxwriter(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
         self._check_excel_multiindex('xlsx')
 
     def _check_excel_multiindex(self, ext):
@@ -713,6 +805,12 @@ class ExcelTests(unittest.TestCase):
 
     def test_to_excel_multiindex_xlsx_dates(self):
         _skip_if_no_openpyxl()
+        _skip_if_no_xlrd()
+        self._check_excel_multiindex_dates('xlsx')
+
+    @set_xlsxwriter_as_writer
+    def test_to_excel_multiindex_xlsxwriter_dates(self):
+        _skip_if_no_xlsxwriter()
         _skip_if_no_xlrd()
         self._check_excel_multiindex_dates('xlsx')
 
@@ -759,6 +857,26 @@ class ExcelTests(unittest.TestCase):
                                index=['A', 'B'], columns=['X', 'Y', 'Z'])
                 tm.assert_frame_equal(rs, xp)
 
+    def test_to_excel_float_format_xlsxwriter(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+
+        filename = '__tmp_to_excel_float_format__.xlsx'
+        df = DataFrame([[0.123456, 0.234567, 0.567567],
+                        [12.32112, 123123.2, 321321.2]],
+                       index=['A', 'B'], columns=['X', 'Y', 'Z'])
+
+        with ensure_clean(filename) as filename:
+            df.to_excel(filename, 'test1', float_format='%.2f',
+                        engine='xlsxwriter')
+
+            reader = ExcelFile(filename)
+            rs = reader.parse('test1', index_col=None)
+            xp = DataFrame([[0.12, 0.23, 0.57],
+                            [12.32, 123123.20, 321321.20]],
+                           index=['A', 'B'], columns=['X', 'Y', 'Z'])
+            tm.assert_frame_equal(rs, xp)
+
     def test_to_excel_unicode_filename(self):
         _skip_if_no_excelsuite()
 
@@ -785,6 +903,34 @@ class ExcelTests(unittest.TestCase):
                                 [12.32, 123123.20, 321321.20]],
                                index=['A', 'B'], columns=['X', 'Y', 'Z'])
                 tm.assert_frame_equal(rs, xp)
+
+    def test_to_excel_unicode_filename_xlsxwriter(self):
+        _skip_if_no_xlsxwriter()
+        _skip_if_no_xlrd()
+
+        filename = u('\u0192u.xlsx')
+
+        try:
+            f = open(filename, 'wb')
+        except UnicodeEncodeError:
+            raise nose.SkipTest('no unicode file names on this system')
+        else:
+            f.close()
+
+        df = DataFrame([[0.123456, 0.234567, 0.567567],
+                        [12.32112, 123123.2, 321321.2]],
+                       index=['A', 'B'], columns=['X', 'Y', 'Z'])
+
+        with ensure_clean(filename) as filename:
+            df.to_excel(filename, 'test1', float_format='%.2f',
+                        engine='xlsxwriter')
+
+            reader = ExcelFile(filename)
+            rs = reader.parse('test1', index_col=None)
+            xp = DataFrame([[0.12, 0.23, 0.57],
+                            [12.32, 123123.20, 321321.20]],
+                           index=['A', 'B'], columns=['X', 'Y', 'Z'])
+            tm.assert_frame_equal(rs, xp)
 
     def test_to_excel_styleconverter(self):
         _skip_if_no_xlwt()
