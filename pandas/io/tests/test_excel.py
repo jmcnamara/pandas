@@ -278,7 +278,7 @@ class ExcelReaderTests(SharedItems, unittest.TestCase):
 
 class ExcelWriterBase(SharedItems):
     # Base class for test cases to run with different Excel writers.
-    # To add a writer test, define two things:
+    # To add a writer test, define the following:
     # 1. A check_skip function that skips your tests if your writer isn't
     #    installed.
     # 2. Add a property ext, which is the file extension that your writer
